@@ -53,9 +53,9 @@ scp -r ~/raspi1_ws pi-robot@172.31.104.54:~
 
 cd robot1_ws/
 colcon build
-
 source install/setup.bash
-ros2 run base_pkg base_controller
+
+//ros2 run base_pkg base_controller
 
 Sau đó bạn có thể chạy thử (nhớ bật ROS 2 daemon trước):
 * Terminal 1: `ros2 run brain_pkg vision`
