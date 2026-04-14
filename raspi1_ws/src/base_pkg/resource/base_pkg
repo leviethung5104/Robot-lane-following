@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+import rclpy
+from rclpy.node import Node
+from geometry_msgs.msg import Twist
+import serial
+import time
+
+class BaseControllerNode(Node):
+    def __init__(self):
+        super().__init__('base_controller_node')
+        
+        # --- THÔNG SỐ ROBOT ---
+        self.wheel_base = 0.2  # Khoảng cách giữa 2 bánh xe là 20cm
+        
+        # --- CẤU HÌNH SERIAL VỚI ARDUINO ---
+        self.serial_port = '/dev/ttyUSB0' 
+        self.baud_rate = 115200
+        self.ser = None
+        
+        try:
+            self.ser = serial.Serial(self.serial_port, self.baud_rate, timeout=1)
+            time.sleep(2) # Chờ Arduino reset sau khi mở cổng
+            self.get_logger().info(f"✅ Đã kết nối Arduino qua cổng {self.serial_port}")
+        except Exception as e:
+            self.get_logger().error(f"❌ Lỗi Serial: Không tìm thấy mạch Arduino! ({e})")
+            
+        # Lắng nghe lệnh Twist từ PC gửi sang topic /cmd_vel
+        self.create_subscription(Twist, '/cmd_vel', self.cmd_callback, 10)
+        self.get_logger().info("🚀 Base Controller đang đợi lệnh từ PC...")
+
+    def cmd_callback(self, msg):
+        # Kiểm tra xem cổng serial có đang mở không trước khi gửi
+        if self.ser is None or not self.ser.is_open:
+            self.get_logger().error("Cổng UART chưa mở. Không thể gửi lệnh!")
+            return
+
+        v = msg.linear.x
+        omega = msg.angular.z
+        
+        # --- ĐỘNG HỌC ROBOT 2 BÁNH VI SAI ---
+        v_left = v - (omega * self.wheel_base / 2.0)
+        v_right = v + (omega * self.wheel_base / 2.0)
+        
+        # --- GỬI XUỐNG ARDUINO ---
+        # Format gửi: <V_left,V_right>
+        command_str = f"<{v_left:.2f},{v_right:.2f}>\n"
+        
+        try:
+            self.ser.write(command_str.encode('utf-8'))
+            self.get_logger().info(f"Gửi Arduino: {command_str.strip()}")
+        except Exception as e:
+            self.get_logger().error(f"Lỗi khi gửi dữ liệu: {e}")
+
+    def destroy_node(self):
+        # Đóng cổng an toàn khi tắt node
+        if self.ser and self.ser.is_open:
+            self.ser.close()
+            self.get_logger().info("Đã đóng cổng UART.")
+        super().destroy_node()
+
+
+# LƯU Ý: Đảm bảo các hàm này nằm bám sát lề trái
+def main(args=None):
+    rclpy.init(args=args)
+    node = BaseControllerNode()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info("Node bị tắt bởi người dùng!")
+    finally:
+        node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()

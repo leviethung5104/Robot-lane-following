@@ -1,0 +1,25 @@
+[0.731s] Invoking command in '/home/tdun/robot1_ws/src/brain_pkg': PYTHONPATH=/home/tdun/robot1_ws/build/brain_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/tdun/robot1_ws/install/brain_pkg/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/brain_pkg build --build-base /home/tdun/robot1_ws/build/brain_pkg/build install --record /home/tdun/robot1_ws/build/brain_pkg/install.log --single-version-externally-managed install_data
+[0.980s] running egg_info
+[0.981s] writing ../../build/brain_pkg/brain_pkg.egg-info/PKG-INFO
+[0.990s] writing dependency_links to ../../build/brain_pkg/brain_pkg.egg-info/dependency_links.txt
+[0.990s] writing entry points to ../../build/brain_pkg/brain_pkg.egg-info/entry_points.txt
+[0.990s] writing requirements to ../../build/brain_pkg/brain_pkg.egg-info/requires.txt
+[0.991s] writing top-level names to ../../build/brain_pkg/brain_pkg.egg-info/top_level.txt
+[0.992s] reading manifest file '../../build/brain_pkg/brain_pkg.egg-info/SOURCES.txt'
+[0.994s] writing manifest file '../../build/brain_pkg/brain_pkg.egg-info/SOURCES.txt'
+[0.994s] running build
+[0.994s] running build_py
+[0.995s] copying brain_pkg/navigation_node.py -> /home/tdun/robot1_ws/build/brain_pkg/build/lib/brain_pkg
+[0.995s] running install
+[0.995s] running install_lib
+[0.996s] copying /home/tdun/robot1_ws/build/brain_pkg/build/lib/brain_pkg/navigation_node.py -> /home/tdun/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg
+[0.997s] byte-compiling /home/tdun/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg/navigation_node.py to navigation_node.cpython-310.pyc
+[0.999s] running install_data
+[0.999s] running install_egg_info
+[1.001s] removing '/home/tdun/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg-0.0.0-py3.10.egg-info' (and everything under it)
+[1.002s] Copying ../../build/brain_pkg/brain_pkg.egg-info to /home/tdun/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg-0.0.0-py3.10.egg-info
+[1.003s] running install_scripts
+[1.025s] Installing navigation script to /home/tdun/robot1_ws/install/brain_pkg/lib/brain_pkg
+[1.026s] Installing vision script to /home/tdun/robot1_ws/install/brain_pkg/lib/brain_pkg
+[1.026s] writing list of installed files to '/home/tdun/robot1_ws/build/brain_pkg/install.log'
+[1.052s] Invoked command in '/home/tdun/robot1_ws/src/brain_pkg' returned '0': PYTHONPATH=/home/tdun/robot1_ws/build/brain_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/tdun/robot1_ws/install/brain_pkg/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/brain_pkg build --build-base /home/tdun/robot1_ws/build/brain_pkg/build install --record /home/tdun/robot1_ws/build/brain_pkg/install.log --single-version-externally-managed install_data

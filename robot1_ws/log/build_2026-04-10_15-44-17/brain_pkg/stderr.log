@@ -1,0 +1,5 @@
+  File "/home/tdun/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg/navigation_node.py", line 147
+    else:
+    ^^^^
+SyntaxError: invalid syntax
+

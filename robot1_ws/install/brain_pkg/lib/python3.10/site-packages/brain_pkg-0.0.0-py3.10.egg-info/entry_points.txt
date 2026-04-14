@@ -1,0 +1,4 @@
+[console_scripts]
+navigation = brain_pkg.navigation_node:main
+vision = brain_pkg.vision_node:main
+

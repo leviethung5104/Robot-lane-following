@@ -1,0 +1,77 @@
+
+0. CHUẨN BỊ VÀ CẤU HÌNH MẠNG (QUAN TRỌNG)
+Để Laptop và Pi có thể giao tiếp với nhau trong môi trường ROS 2, cả hai thiết bị bắt buộc phải kết nối chung vào một mạng Wifi và có cùng Domain ID.
+0.1. Thông tin đăng nhập Raspberry Pi (SSH)
+Username: pi-robot
+Password: 88888888
+Cách kết nối từ Laptop: Mở Terminal trên Laptop và gõ lệnh:
+ssh pi-robot@<IP_cua_Pi>
+
+ssh pi-robot@172.31.104.54
+
+
+0.2. Đồng bộ biến môi trường ROS 2
+Thực hiện các bước sau trên CẢ LAPTOP VÀ PI:
+Mở file cấu hình bashrc:
+sudo gedit ~/.bashrc   # (Hoặc dùng 'nano ~/.bashrc' nếu ở trên Pi)
+
+
+Kéo xuống cuối cùng và dán 2 dòng sau vào:
+export ROS_DOMAIN_ID=0
+export ROS_LOCALHOST_ONLY=0
+
+
+Lưu file và cập nhật hệ thống:
+source ~/.bashrc
+
+
+0.3. Kiểm tra kết nối mạng (Ping Topic)
+Mở 2 Terminal (1 trên Pi, 1 trên Laptop) để kiểm tra xem 2 máy đã "thấy" nhau chưa:
+Trên Pi (Người gửi): ros2 topic pub /test_topic std_msgs/String "data: 'Hello from Pi'" -r 1
+Trên Laptop (Người nghe): ros2 topic echo /test_topic (Nếu Laptop nhận được dòng chữ "Hello from Pi" liên tục thì mạng đã thông thành công!)
+
+
+1. KHỞI CHẠY TRÊN RASPBERRY PI (ROBOT) 🤖
+🛑 CẢNH BÁO AN TOÀN: Tuyệt đối KHÔNG rút nguồn trực tiếp khi Pi đang chạy. Trước khi tắt xe, hãy gõ lệnh: 
+	sudo poweroff
+SSH vào Pi, gõ tmux để mở trình quản lý chia màn hình, chia làm 2 ô và thực hiện:
+
+pip3 install pyserial
+
+tmux
+
+cd ~/raspi1_ws
+colcon build
+source install/setup.bash
+ros2 run base_pkg base_controller
+
+
+2. KHỞI CHẠY TRÊN LAPTOP (TRẠM XỬ LÝ AI) 💻
+
+cop từ mt sang
+scp -r ~/raspi1_ws pi-robot@172.31.104.54:~
+
+cd robot1_ws/
+colcon build
+
+source install/setup.bash
+ros2 run base_pkg base_controller
+
+Sau đó bạn có thể chạy thử (nhớ bật ROS 2 daemon trước):
+* Terminal 1: `ros2 run brain_pkg vision`
+* Terminal 2: `ros2 run brain_pkg navigation`
+
+Terminal 3: Mở cam raw
+ros2 run rqt_image_view rqt_image_view
+
+yolo export model=best.pt format=onnx half=True imgsz=320
+
+
+
+Terminal 4: Mở cam astra 
+
+cd ros2_astra_ws/
+source install/setup.bash
+ros2 launch astra_camera astra_pro.launch.xml
+
+
