@@ -20,7 +20,7 @@ const float RPM_FILTER_ALPHA = 0.3;
 const float WHEEL_RADIUS = 0.033; // ms
 
 const float V_TO_RPM = 60.0 / (2 * PI * WHEEL_RADIUS);
-const unsigned long UART_TIMEOUT = 200; // ms 
+const unsigned long UART_TIMEOUT = 200;  // ms 
 unsigned long lastUARTTime = 0;
 
 const unsigned long CONTROL_INTERVAL_MS = 30;
