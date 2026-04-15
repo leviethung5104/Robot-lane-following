@@ -1,0 +1,46 @@
+[0.955s] Invoking command in '/home/viethung/ros2_ws/src/my_robot': PYTHONPATH=/home/viethung/ros2_ws/build/my_robot/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/viethung/ros2_ws/install/my_robot/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/my_robot build --build-base /home/viethung/ros2_ws/build/my_robot/build install --record /home/viethung/ros2_ws/build/my_robot/install.log --single-version-externally-managed install_data
+[1.316s] running egg_info
+[1.317s] creating ../../build/my_robot/my_robot.egg-info
+[1.318s] writing ../../build/my_robot/my_robot.egg-info/PKG-INFO
+[1.318s] writing dependency_links to ../../build/my_robot/my_robot.egg-info/dependency_links.txt
+[1.318s] writing entry points to ../../build/my_robot/my_robot.egg-info/entry_points.txt
+[1.319s] writing requirements to ../../build/my_robot/my_robot.egg-info/requires.txt
+[1.319s] writing top-level names to ../../build/my_robot/my_robot.egg-info/top_level.txt
+[1.319s] writing manifest file '../../build/my_robot/my_robot.egg-info/SOURCES.txt'
+[1.323s] reading manifest file '../../build/my_robot/my_robot.egg-info/SOURCES.txt'
+[1.324s] writing manifest file '../../build/my_robot/my_robot.egg-info/SOURCES.txt'
+[1.325s] running build
+[1.325s] running build_py
+[1.325s] creating /home/viethung/ros2_ws/build/my_robot/build
+[1.325s] creating /home/viethung/ros2_ws/build/my_robot/build/lib
+[1.325s] creating /home/viethung/ros2_ws/build/my_robot/build/lib/my_robot
+[1.325s] copying my_robot/base_controller.py -> /home/viethung/ros2_ws/build/my_robot/build/lib/my_robot
+[1.325s] copying my_robot/__init__.py -> /home/viethung/ros2_ws/build/my_robot/build/lib/my_robot
+[1.326s] copying my_robot/uart_node.py -> /home/viethung/ros2_ws/build/my_robot/build/lib/my_robot
+[1.326s] copying my_robot/camera_node.py -> /home/viethung/ros2_ws/build/my_robot/build/lib/my_robot
+[1.326s] running install
+[1.326s] running install_lib
+[1.327s] creating /home/viethung/ros2_ws/install/my_robot/lib/python3.10/site-packages/my_robot
+[1.328s] copying /home/viethung/ros2_ws/build/my_robot/build/lib/my_robot/base_controller.py -> /home/viethung/ros2_ws/install/my_robot/lib/python3.10/site-packages/my_robot
+[1.328s] copying /home/viethung/ros2_ws/build/my_robot/build/lib/my_robot/__init__.py -> /home/viethung/ros2_ws/install/my_robot/lib/python3.10/site-packages/my_robot
+[1.328s] copying /home/viethung/ros2_ws/build/my_robot/build/lib/my_robot/uart_node.py -> /home/viethung/ros2_ws/install/my_robot/lib/python3.10/site-packages/my_robot
+[1.328s] copying /home/viethung/ros2_ws/build/my_robot/build/lib/my_robot/camera_node.py -> /home/viethung/ros2_ws/install/my_robot/lib/python3.10/site-packages/my_robot
+[1.329s] byte-compiling /home/viethung/ros2_ws/install/my_robot/lib/python3.10/site-packages/my_robot/base_controller.py to base_controller.cpython-310.pyc
+[1.329s] byte-compiling /home/viethung/ros2_ws/install/my_robot/lib/python3.10/site-packages/my_robot/__init__.py to __init__.cpython-310.pyc
+[1.330s] byte-compiling /home/viethung/ros2_ws/install/my_robot/lib/python3.10/site-packages/my_robot/uart_node.py to uart_node.cpython-310.pyc
+[1.331s] byte-compiling /home/viethung/ros2_ws/install/my_robot/lib/python3.10/site-packages/my_robot/camera_node.py to camera_node.cpython-310.pyc
+[1.332s] running install_data
+[1.332s] creating /home/viethung/ros2_ws/install/my_robot/share/ament_index
+[1.332s] creating /home/viethung/ros2_ws/install/my_robot/share/ament_index/resource_index
+[1.332s] creating /home/viethung/ros2_ws/install/my_robot/share/ament_index/resource_index/packages
+[1.333s] copying resource/my_robot -> /home/viethung/ros2_ws/install/my_robot/share/ament_index/resource_index/packages
+[1.333s] copying package.xml -> /home/viethung/ros2_ws/install/my_robot/share/my_robot
+[1.333s] creating /home/viethung/ros2_ws/install/my_robot/share/my_robot/launch
+[1.333s] copying launch/robot.launch.py -> /home/viethung/ros2_ws/install/my_robot/share/my_robot/launch
+[1.333s] running install_egg_info
+[1.336s] Copying ../../build/my_robot/my_robot.egg-info to /home/viethung/ros2_ws/install/my_robot/lib/python3.10/site-packages/my_robot-0.0.0-py3.10.egg-info
+[1.338s] running install_scripts
+[1.367s] Installing camera_node script to /home/viethung/ros2_ws/install/my_robot/lib/my_robot
+[1.367s] Installing uart_node script to /home/viethung/ros2_ws/install/my_robot/lib/my_robot
+[1.367s] writing list of installed files to '/home/viethung/ros2_ws/build/my_robot/install.log'
+[1.404s] Invoked command in '/home/viethung/ros2_ws/src/my_robot' returned '0': PYTHONPATH=/home/viethung/ros2_ws/build/my_robot/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/viethung/ros2_ws/install/my_robot/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/my_robot build --build-base /home/viethung/ros2_ws/build/my_robot/build install --record /home/viethung/ros2_ws/build/my_robot/install.log --single-version-externally-managed install_data

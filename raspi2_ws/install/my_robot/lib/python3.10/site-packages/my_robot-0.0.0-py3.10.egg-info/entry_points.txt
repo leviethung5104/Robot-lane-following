@@ -1,0 +1,4 @@
+[console_scripts]
+camera_node = my_robot.camera_node:main
+uart_node = my_robot.uart_node:main
+
