@@ -1,75 +1,64 @@
-#!/usr/bin/env python3
-import rclpy
-from rclpy.node import Node
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
-import cv2
-import numpy as np
 from openni import openni2
+import numpy as np
+import cv2
+import socket
+import struct
+import pickle
+import time
 
-class CameraNode(Node):
-    def __init__(self):
-        super().__init__('camera_node')
+# ===== INIT CAMERA =====
+openni2.initialize("/home/pi/OpenNI-Linux-Arm64-2.3/Redist")
+dev = openni2.Device.open_any()
 
-        self.bridge = CvBridge()
+depth_stream = dev.create_depth_stream()
+depth_stream.start()
 
-        self.pub_rgb = self.create_publisher(Image, '/camera/rgb', 10)
-        self.pub_depth = self.create_publisher(Image, '/camera/depth', 10)
+cap = cv2.VideoCapture(0)
 
-        # ================== RGB ==================
-        self.cap = cv2.VideoCapture(0)
+# ===== SOCKET SERVER =====
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind(('0.0.0.0', 9999))
+server_socket.listen(1)
 
-        # ================== DEPTH (Astra Pro) ==================
-        openni2.initialize()
-        self.dev = openni2.Device.open_any()
+print("Waiting for laptop...")
+conn, addr = server_socket.accept()
+print("Connected:", addr)
 
-        self.depth_stream = self.dev.create_depth_stream()
-        self.depth_stream.start()
+# ===== MAIN LOOP =====
+while True:
+    try:
+        # ===== DEPTH =====
+        depth_frame = depth_stream.read_frame()
+        depth_data = depth_frame.get_buffer_as_uint16()
+        depth_img = np.frombuffer(depth_data, dtype=np.uint16).reshape((480, 640))
 
-        self.timer = self.create_timer(0.05, self.timer_callback)
+        # ===== RGB =====
+        ret, frame = cap.read()
+        if not ret:
+            continue
 
-    def timer_callback(self):
-        # ================== RGB ==================
-        ret, frame = self.cap.read()
-        if ret:
-            rgb_msg = self.bridge.cv2_to_imgmsg(frame, encoding='bgr8')
-            self.pub_rgb.publish(rgb_msg)
+        # ===== NÉN RGB =====
+        _, rgb_buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
+        rgb_bytes = rgb_buffer.tobytes()
 
-        # ================== DEPTH ==================
-        frame = self.depth_stream.read_frame()
-        frame_data = frame.get_buffer_as_uint16()
+        # ===== NÉN DEPTH =====
+        depth_norm = cv2.convertScaleAbs(depth_img, alpha=0.03)
+        _, depth_buffer = cv2.imencode('.jpg', depth_norm, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
+        depth_bytes = depth_buffer.tobytes()
 
-        depth_array = np.frombuffer(frame_data, dtype=np.uint16)
-        depth_array = depth_array.reshape((480, 640))
+        # ===== PACK DATA =====
+        data = (rgb_bytes, depth_bytes)
+        packet = pickle.dumps(data)
 
-        # ===== xử lý nhiễu =====
-        depth_array[depth_array == 0] = 9999
+        # ===== GỬI =====
+        conn.sendall(struct.pack("!I", len(packet)) + packet)
 
-        # ===== lấy vùng phía trước =====
-        roi = depth_array[200:280, 300:340]
-        valid = roi[roi < 5000]
+        # ===== LIMIT FPS =====
+        time.sleep(0.03)  # ~30 FPS
 
-        if len(valid) > 0:
-            distance = int(np.mean(valid))
-        else:
-            distance = 9999
+    except Exception as e:
+        print("Error / Disconnected:", e)
+        break
 
-        # DEBUG
-        self.get_logger().info(f"Distance: {distance} mm")
-
-        # publish depth (giữ nguyên 16UC1)
-        depth_msg = self.bridge.cv2_to_imgmsg(depth_array, encoding='passthrough')
-        self.pub_depth.publish(depth_msg)
-
-    def destroy_node(self):
-        self.depth_stream.stop()
-        openni2.unload()
-        super().destroy_node()
-
-
-def main(args=None):
-    rclpy.init(args=args)
-    node = CameraNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+conn.close()
+server_socket.close()

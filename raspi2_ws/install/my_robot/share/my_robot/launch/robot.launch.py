@@ -6,7 +6,7 @@ import os
 
 def generate_launch_description():
 
-    # --- OpenNI2 Camera Launch ---
+    '''# --- OpenNI2 Camera Launch ---
     openni_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
@@ -15,6 +15,7 @@ def generate_launch_description():
             )
         )
     )
+    '''
 
     camera_bridge = Node(
         package='my_robot',
@@ -31,7 +32,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        openni_launch,
+      #  openni_launch,
         camera_bridge,
         uart_bridge
     ])
