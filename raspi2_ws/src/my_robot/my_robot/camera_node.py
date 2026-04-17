@@ -14,51 +14,53 @@ depth_stream = dev.create_depth_stream()
 depth_stream.start()
 
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 
 # ===== SOCKET SERVER =====
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server_socket.bind(('0.0.0.0', 9999))
 server_socket.listen(1)
 
 print("Waiting for laptop...")
-conn, addr = server_socket.accept()
-print("Connected:", addr)
 
-# ===== MAIN LOOP =====
 while True:
+    conn, addr = server_socket.accept()
+    print("Connected:", addr)
+
     try:
-        # ===== DEPTH =====
-        depth_frame = depth_stream.read_frame()
-        depth_data = depth_frame.get_buffer_as_uint16()
-        depth_img = np.frombuffer(depth_data, dtype=np.uint16).reshape((480, 640))
+        while True:
+            # ===== DEPTH RAW =====
+            depth_frame = depth_stream.read_frame()
+            depth_data = depth_frame.get_buffer_as_uint16()
 
-        # ===== RGB =====
-        ret, frame = cap.read()
-        if not ret:
-            continue
+            depth_img = np.frombuffer(depth_data, dtype=np.uint16).reshape((480, 640))
 
-        # ===== NÉN RGB =====
-        _, rgb_buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
-        rgb_bytes = rgb_buffer.tobytes()
+            # resize nhẹ lại cho đỡ nặng
+            depth_img = cv2.resize(depth_img, (320, 240))
 
-        # ===== NÉN DEPTH =====
-        depth_norm = cv2.convertScaleAbs(depth_img, alpha=0.03)
-        _, depth_buffer = cv2.imencode('.jpg', depth_norm, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
-        depth_bytes = depth_buffer.tobytes()
+            # ===== RGB =====
+            ret, frame = cap.read()
+            if not ret:
+                continue
 
-        # ===== PACK DATA =====
-        data = (rgb_bytes, depth_bytes)
-        packet = pickle.dumps(data)
+            # ===== NÉN RGB =====
+            _, rgb_buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 75])
+            rgb_bytes = rgb_buffer.tobytes()
 
-        # ===== GỬI =====
-        conn.sendall(struct.pack("!I", len(packet)) + packet)
+            # ===== DEPTH RAW BYTES =====
+            depth_bytes = depth_img.tobytes()
 
-        # ===== LIMIT FPS =====
-        time.sleep(0.03)  # ~30 FPS
+            # ===== PACK =====
+            data = (rgb_bytes, depth_bytes, depth_img.shape)
+            packet = pickle.dumps(data)
+
+            # ===== GỬI =====
+            conn.sendall(struct.pack("!I", len(packet)) + packet)
+
+            time.sleep(0.03)  # ~30 FPS
 
     except Exception as e:
-        print("Error / Disconnected:", e)
-        break
-
-conn.close()
-server_socket.close()
+        print("Disconnected:", e)
+        conn.close()
