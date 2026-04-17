@@ -7,7 +7,7 @@ import pickle
 import time
 
 # ===== INIT CAMERA =====
-openni2.initialize("/home/pi/OpenNI-Linux-Arm64-2.3/Redist")
+openni2.initialize("/home/pi-robot/OpenNI-Linux-Arm64-2.3/Redist")
 dev = openni2.Device.open_any()
 
 depth_stream = dev.create_depth_stream()
