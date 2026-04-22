@@ -20,7 +20,7 @@ const float RPM_FILTER_ALPHA = 0.3;
 const float WHEEL_RADIUS = 0.033; // ms
 
 const float V_TO_RPM = 60.0 / (2 * PI * WHEEL_RADIUS);
-const unsigned long UART_TIMEOUT = 200;  // ms 
+const unsigned long UART_TIMEOUT = 200; // ms 
 unsigned long lastUARTTime = 0;
 
 const unsigned long CONTROL_INTERVAL_MS = 30;
@@ -174,8 +174,8 @@ void loop() {
       int commaIndex = inputString.indexOf(',');
 
       if (commaIndex > 0) {
-        float v_left  = inputString.substring(0, commaIndex).toFloat();
-        float v_right = inputString.substring(commaIndex + 1).toFloat();
+        float v_right  = inputString.substring(0, commaIndex).toFloat();
+        float v_left = inputString.substring(commaIndex + 1).toFloat();
 
         // ===== Convert m/s → RPM =====
         float rpmL = v_left * V_TO_RPM;
@@ -187,16 +187,6 @@ void loop() {
 
         // ===== RESET TIMEOUT =====
         lastUARTTime = millis();
-
-        // ===== DEBUG =====
-        Serial.print("CMD: ");
-        Serial.print(v_left);
-        Serial.print(" | ");
-        Serial.print(v_right);
-        Serial.print(" || RPM_CMD: ");
-        Serial.print(targetRPM1_cmd);
-        Serial.print(" | ");
-        Serial.println(targetRPM2_cmd);
       }
     }
     else {
@@ -215,6 +205,7 @@ float computePID(PID &pid, float target, float current, float dt) {
 
   float du = a1 * e + a2 * pid.e1 + a3 * pid.e2;
   pid.u += du;
+  pid.u = constrain(pid.u, -PWM_MAX, PWM_MAX);
 
   float ff = KFF * target;
   float output = pid.u + ff;
