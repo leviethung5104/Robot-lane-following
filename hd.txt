@@ -1,3 +1,22 @@
+----------------------------------------------
+cấp quyền chạy file python:
+	chmod +x camera_node.py
+	chmod +x uart_node.py
+
+-----------------trên PI---------------------
+cd tới ~/ros2_ws
+colcon build
+source install/setup.bash
+ros2 launch my_robot robot.launch.py
+
+
+-----------------trên Laptop-----------------
+cd tới ~/robot1_ws
+colcon build
+source install/setup.bash
+ros2 launch brain_pkg main.launch.py
+
+-------------------------------------------------
 
 0. CHUẨN BỊ VÀ CẤU HÌNH MẠNG (QUAN TRỌNG)
 Để Laptop và Pi có thể giao tiếp với nhau trong môi trường ROS 2, cả hai thiết bị bắt buộc phải kết nối chung vào một mạng Wifi và có cùng Domain ID.
@@ -7,7 +26,7 @@ Password: 88888888
 Cách kết nối từ Laptop: Mở Terminal trên Laptop và gõ lệnh:
 ssh pi-robot@<IP_cua_Pi>
 
-ssh pi-robot@172.31.104.54
+ssh pi-robot@10.144.153.54
 
 
 0.2. Đồng bộ biến môi trường ROS 2
