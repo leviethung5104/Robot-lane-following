@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 os.environ["QT_QPA_PLATFORM"] = "xcb" 
-
+from std_msgs.msg import Float32
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
@@ -10,60 +10,62 @@ from cv_bridge import CvBridge
 import cv2
 import numpy as np
 import time
+from std_msgs.msg import Float32MultiArray
 
 class NavigationNode(Node):
     def __init__(self):
         super().__init__('navigation_node')
         self.bridge = CvBridge()
-        
         self.create_subscription(Image, '/bev_image', self.bev_callback, 10)
         self.create_subscription(Point, '/obs_center_raw', self.obs_center_callback, 10)
-        self.create_subscription(Image, '/camera/depth/image_raw', self.depth_callback, 10)
-        
+        self.create_subscription(Float32, '/obs_distance', self.distance_callback, 10)
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
-        self.depth_debug_pub = self.create_publisher(Image, '/depth_debug_image', 10)
+        self.traj_pub = self.create_publisher(Float32MultiArray, '/trajectory_data', 10)
         
         # --- THAM SỐ CẤU HÌNH ---
         self.PX_PER_CM = 20             
         self.car_x = 240                
         self.car_y = 480                
         self.lookahead_y = self.car_y - int(5 * self.PX_PER_CM)  
-        self.offset_lane = int(11 * self.PX_PER_CM)             
+        self.offset_lane = int(11 * self.PX_PER_CM)    
+        self.filtered_target_x = 240.0         
         
         # Tâm quay của robot cách đáy camera 5cm (5cm * 20px = 100px)
         self.robot_y = self.car_y + int(12 * self.PX_PER_CM)
-        
         width_px = int(20 * self.PX_PER_CM)
         height_px = int(5 * self.PX_PER_CM)
         self.stop_zone = (
             self.car_x - (width_px // 2),  
             self.car_y - height_px,        
             self.car_x + (width_px // 2),  
-            self.car_y                     
-        )
+            self.car_y)
         
         self.normal_speed = 0.25
         self.current_depth_image = None
-        
         self.obs_distance_meters = 999.0
         self.obs_center = None
         self.obs_lane = "CHUA_RO"
         
-        # Biến trạng thái máy (State Machine)
-        self.current_state = "bam lan" # Mặc định bám làn
+        # Biến trạng thái máy 
+        self.current_state = "bam lan"
         self.car_lane_history = "CHUA_RO"
         self.evade_target_lane = "CHUA_RO"
+        self.original_lane = "CHUA_RO"
         
         # Biến đếm thời gian mất làn
         self.last_lane_time = time.time()
-        
         self.get_logger().info("🚀 Navigation Node: Đã cập nhật tính năng giữ tốc độ và chỉ chuyển làn ở nét đứt")
 
+    '''
     def depth_callback(self, msg):
         try:
             self.current_depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
         except Exception as e:
             pass
+    '''
+    
+    def distance_callback(self, msg):
+        self.obs_distance_meters = msg.data
 
     def obs_center_callback(self, msg):
         if msg.x == -1.0:
@@ -82,6 +84,7 @@ class NavigationNode(Node):
         else:
             self.obs_lane = "CHUA_RO"
         
+        '''
         # Tính khoảng cách bằng khung 5x5
         if self.current_depth_image is not None:
             h, w = self.current_depth_image.shape[:2]
@@ -98,6 +101,7 @@ class NavigationNode(Node):
                 else:
                     valid_depths = roi_depth[roi_depth > 0]
                     self.obs_distance_meters = float(np.mean(valid_depths)) / 1000.0 if valid_depths.size > 0 else 999.0
+	'''
 
     def bev_callback(self, msg):
         try:
@@ -138,81 +142,86 @@ class NavigationNode(Node):
         is_in_stop_zone = np.any(roi_stop) 
 
         # 2. STATE MACHINE QUYẾT ĐỊNH
-        # Ưu tiên cao nhất là Dừng khẩn cấp do Mất làn hoặc Vật cản
-        if time_lost > 0.5:
-            self.current_state = "dung lai"
-        elif is_in_stop_zone or (0.0 < self.obs_distance_meters < 0.4):
+        is_critical_danger = is_in_stop_zone or (0.0 < self.obs_distance_meters < 0.4)
+        if time_lost > 0.5 or is_critical_danger:
             self.current_state = "dung lai"
         elif self.current_state == "dung lai":
-            # Nếu vật cản đi khỏi vùng an toàn và xe ĐÃ NHÌN THẤY LẠI LÀN ĐƯỜNG
-            self.current_state = "bam lan"
+            if not is_critical_danger and (self.obs_distance_meters > 0.5 or self.obs_distance_meters == 999.0):
+                self.current_state = "bam lan"
 
         if self.current_state == "bam lan":
-            # Điều kiện kích hoạt chuyển làn: Cách 0.6m - 0.8m, trùng làn, và phải biết rõ làn hiện tại
             if (0.6 <= self.obs_distance_meters <= 0.8 and 
                 current_car_lane == self.obs_lane and 
                 current_car_lane != "CHUA_RO"):
                 
-                # CHỈ CHUYỂN LÀN NẾU PHÁT HIỆN NÉT ĐỨT (idx_dashed.size > 0)
                 if idx_dashed.size > 0:
                     self.current_state = "chuyen lan"
+                    self.original_lane = current_car_lane # LƯU LẠI LÀN BAN ĐẦU
                     self.evade_target_lane = "PHAI" if current_car_lane == "TRAI" else "TRAI"
-                    self.get_logger().warn(f"⚠️ Vật cản ở làn {self.obs_lane}, cách {self.obs_distance_meters:.2f}m -> BẮT ĐẦU CHUYỂN LÀN SANG {self.evade_target_lane}")
+                    self.get_logger().warn(f"⚠️ Tránh vật cản -> SANG {self.evade_target_lane}")
                 else:
-                    self.get_logger().warn(f"⛔ Vật cản phía trước nhưng vạch ngăn là NÉT LIỀN -> Không chuyển làn, chuẩn bị dừng khẩn cấp!")
-                    # Xe tiếp tục trạng thái "bam lan" và sẽ bị bắt buộc "dung lai" khi khoảng cách < 0.4m
+                    self.get_logger().warn(f"⛔ Vạch nét liền -> Không chuyển làn!")
                 
         elif self.current_state == "chuyen lan":
-            # Điều kiện kết thúc chuyển làn: Đã sang hẳn làn bên kia VÀ vật cản đã an toàn
             is_safe_distance = (self.obs_distance_meters > 1.2 or self.obs_distance_meters == 999.0)
             if current_car_lane == self.evade_target_lane and is_safe_distance:
-                self.current_state = "bam lan"
-                self.get_logger().info("✅ Đã vượt và ổn định ở làn mới. Trở lại bám làn.")
+                self.current_state = "chuyen ve"
+                self.get_logger().info(f"✅ Đã vượt. Chuẩn bị CHUYỂN VỀ {self.original_lane}")
 
-        # 3. TÍNH TOÁN ĐIỂM ĐÍCH (Target X) CHỈ QUA VẠCH ĐỨT
+        elif self.current_state == "chuyen ve":
+            if current_car_lane == self.original_lane:
+                self.current_state = "bam lan"
+                self.get_logger().info("✅ Đã về làn gốc an toàn!")
+
+        # 3. TÍNH TOÁN ĐIỂM ĐÍCH (Target X) DỰA TRÊN LÀN MỤC TIÊU
         active_lane_goal = self.evade_target_lane if self.current_state == "chuyen lan" else current_car_lane
-        target_x = self.car_x
+        raw_target_x = self.car_x
 
         if active_lane_goal == "TRAI":
-            if idx_dashed.size > 0: target_x = np.mean(idx_dashed) - self.offset_lane
-            elif idx_solid.size > 0: target_x = np.mean(idx_solid) + self.offset_lane
+            if idx_dashed.size > 0: raw_target_x = np.mean(idx_dashed) - self.offset_lane
+            elif idx_solid.size > 0: raw_target_x = np.mean(idx_solid) + self.offset_lane
         elif active_lane_goal == "PHAI":
-            if idx_dashed.size > 0: target_x = np.mean(idx_dashed) + self.offset_lane
-            elif idx_solid.size > 0: target_x = np.mean(idx_solid) - self.offset_lane
+            if idx_dashed.size > 0: raw_target_x = np.mean(idx_dashed) + self.offset_lane
+            elif idx_solid.size > 0: raw_target_x = np.mean(idx_solid) - self.offset_lane
         else:
-            # Fallback nếu mất hoàn toàn dữ liệu
-            if idx_dashed.size > 0 and idx_solid.size > 0:
-                target_x = (np.mean(idx_dashed) + np.mean(idx_solid)) / 2
-            elif idx_dashed.size > 0:
-                avg_d = np.mean(idx_dashed)
-                target_x = avg_d - self.offset_lane if avg_d > self.car_x else avg_d + self.offset_lane
+            if idx_dashed.size > 0: raw_target_x = np.mean(idx_dashed) - self.offset_lane if np.mean(idx_dashed) > 240 else np.mean(idx_dashed) + self.offset_lane
+            
+        raw_target_x = np.clip(raw_target_x, 0, 480)
 
-        target_x = np.clip(target_x, 0, 480)
+        # Bộ lọc Low-Pass Filter (EMA) giúp vô lăng không bị vẩy cá khi nhiễu frame
+        self.filtered_target_x = 0.8 * self.filtered_target_x + 0.2 * raw_target_x
+        target_x = self.filtered_target_x
 
-        # 4. TRUYỀN LỆNH DỰA THEO TRẠNG THÁI
+        # 4. TRUYỀN LỆNH DỰA THEO TRẠNG THÁI (FIX LƯỢN GẮT)
         if self.current_state == "dung lai":
             cmd_msg.linear.x = 0.0
             cmd_msg.angular.z = 0.0
         else:
-            # CẬP NHẬT: Giữ nguyên tốc độ (self.normal_speed) khi chuyển làn thay vì chia 2
-            cmd_msg.linear.x = self.normal_speed
-            
-            # TÍNH PURE PURSUIT TỪ TÂM ROBOT THỰC TẾ
             dx = target_x - self.car_x
             dy = self.robot_y - self.lookahead_y 
             sq_dist = dx*dx + dy*dy
             
             if sq_dist > 0:
-                steering = (2 * dx / sq_dist) * cmd_msg.linear.x * 1200.0
+                # Giảm hệ số K từ 1200 xuống 800 để xe lượn mềm mại hơn khi chuyển làn
+                steering = (2 * dx / sq_dist) * self.normal_speed * 800.0
                 cmd_msg.angular.z = np.clip(steering, -1.5, 1.5)
+                
+            # Giảm tốc độ tịnh tiến khi đang vào cua gắt để tránh trượt bánh (Drift)
+            speed_factor = 1.0 - (0.3 * abs(cmd_msg.angular.z))
+            cmd_msg.linear.x = max(0.12, self.normal_speed * speed_factor)
 
-        # Lựa chọn hiển thị log
+        # 5. điều khiển và quỹ đạo
+        self.cmd_pub.publish(cmd_msg)
+        
+        traj_msg = Float32MultiArray()
+        traj_msg.data = [float(target_x), float(self.car_x), float(cmd_msg.angular.z)]
+        self.traj_pub.publish(traj_msg)
+
+        # Hiển thị log
         log_warning = "[MAT LAN]" if time_lost > 0.5 else ""
         self.get_logger().info(
-            f"[{self.current_state}] {log_warning} Làn xe: {current_car_lane} | Vật cản: {self.obs_lane} ({self.obs_distance_meters:.2f}m) | "
-            f"V: {cmd_msg.linear.x:.2f} m/s | W: {cmd_msg.angular.z:.2f} rad/s"
-        )
-        self.cmd_pub.publish(cmd_msg)
+            f"[{self.current_state}] {log_warning} Làn: {current_car_lane} | Đích: {target_x:.1f} | "
+            f"V: {cmd_msg.linear.x:.2f} | W: {cmd_msg.angular.z:.2f}")
 
         # --- DRAW BEV DEBUG ---
         cv2.circle(bev_bgr, (int(target_x), self.lookahead_y), 8, (0, 255, 255), -1) 
@@ -229,33 +238,6 @@ class NavigationNode(Node):
             cv2.putText(bev_bgr, "MAT LAN!", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
         cv2.imshow("Goc nhin BEV", bev_bgr)
-        
-        # --- DRAW DEPTH JET ---
-        if self.current_depth_image is not None:
-            if self.current_depth_image.dtype == np.float32:
-                depth_mm = self.current_depth_image * 1000.0
-                depth_mm = np.nan_to_num(depth_mm, nan=0.0)
-            else:
-                depth_mm = self.current_depth_image.astype(np.float32)
-
-            depth_8bit = cv2.convertScaleAbs(depth_mm, alpha=255.0/4500.0)
-            depth_color = cv2.applyColorMap(depth_8bit, cv2.COLORMAP_JET)
-            depth_color[depth_mm == 0] = [0, 0, 0] 
-            
-            if self.obs_center is not None and self.obs_distance_meters != 999.0:
-                cx, cy = self.obs_center
-                cv2.rectangle(depth_color, (cx - 2, cy - 2), (cx + 2, cy + 2), (0, 255, 0), 1)
-                cv2.circle(depth_color, (cx, cy), 1, (0, 0, 255), -1)
-                cv2.putText(depth_color, f"{self.obs_distance_meters:.2f}m", 
-                            (cx + 10, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-                            
-            cv2.imshow("Camera Chieu Sau ROS", depth_color)
-            
-            try:
-                self.depth_debug_pub.publish(self.bridge.cv2_to_imgmsg(depth_color, encoding="bgr8"))
-            except Exception:
-                pass
-
         cv2.waitKey(1)
 
 def main(args=None):

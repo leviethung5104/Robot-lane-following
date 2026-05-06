@@ -1,0 +1,37 @@
+[1.157s] Invoking command in '/home/viethung/Downloads/Robot/robot1_ws/src/brain_pkg': PYTHONPATH=/home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/brain_pkg build --build-base /home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/build install --record /home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/install.log --single-version-externally-managed install_data
+[1.515s] running egg_info
+[1.516s] writing ../../build/brain_pkg/brain_pkg.egg-info/PKG-INFO
+[1.516s] writing dependency_links to ../../build/brain_pkg/brain_pkg.egg-info/dependency_links.txt
+[1.517s] writing entry points to ../../build/brain_pkg/brain_pkg.egg-info/entry_points.txt
+[1.517s] writing requirements to ../../build/brain_pkg/brain_pkg.egg-info/requires.txt
+[1.517s] writing top-level names to ../../build/brain_pkg/brain_pkg.egg-info/top_level.txt
+[1.520s] reading manifest file '../../build/brain_pkg/brain_pkg.egg-info/SOURCES.txt'
+[1.531s] writing manifest file '../../build/brain_pkg/brain_pkg.egg-info/SOURCES.txt'
+[1.531s] running build
+[1.532s] running build_py
+[1.532s] copying brain_pkg/vision_node.py -> /home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/build/lib/brain_pkg
+[1.532s] copying brain_pkg/trajectory_node.py -> /home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/build/lib/brain_pkg
+[1.532s] copying brain_pkg/bridge_node.py -> /home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/build/lib/brain_pkg
+[1.533s] copying brain_pkg/navigation_node.py -> /home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/build/lib/brain_pkg
+[1.533s] running install
+[1.534s] running install_lib
+[1.535s] copying /home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/build/lib/brain_pkg/vision_node.py -> /home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg
+[1.536s] copying /home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/build/lib/brain_pkg/trajectory_node.py -> /home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg
+[1.536s] copying /home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/build/lib/brain_pkg/bridge_node.py -> /home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg
+[1.536s] copying /home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/build/lib/brain_pkg/navigation_node.py -> /home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg
+[1.537s] byte-compiling /home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg/vision_node.py to vision_node.cpython-310.pyc
+[1.540s] byte-compiling /home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg/trajectory_node.py to trajectory_node.cpython-310.pyc
+[1.541s] byte-compiling /home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg/bridge_node.py to bridge_node.cpython-310.pyc
+[1.543s] byte-compiling /home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg/navigation_node.py to navigation_node.cpython-310.pyc
+[1.546s] running install_data
+[1.546s] copying launch/main.launch.py -> /home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/share/brain_pkg/launch
+[1.546s] running install_egg_info
+[1.549s] removing '/home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg-0.0.0-py3.10.egg-info' (and everything under it)
+[1.549s] Copying ../../build/brain_pkg/brain_pkg.egg-info to /home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/python3.10/site-packages/brain_pkg-0.0.0-py3.10.egg-info
+[1.551s] running install_scripts
+[1.578s] Installing bridge script to /home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/brain_pkg
+[1.578s] Installing navigation script to /home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/brain_pkg
+[1.579s] Installing trajectory script to /home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/brain_pkg
+[1.579s] Installing vision script to /home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/brain_pkg
+[1.579s] writing list of installed files to '/home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/install.log'
+[1.615s] Invoked command in '/home/viethung/Downloads/Robot/robot1_ws/src/brain_pkg' returned '0': PYTHONPATH=/home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/viethung/Downloads/Robot/robot1_ws/install/brain_pkg/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/brain_pkg build --build-base /home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/build install --record /home/viethung/Downloads/Robot/robot1_ws/build/brain_pkg/install.log --single-version-externally-managed install_data

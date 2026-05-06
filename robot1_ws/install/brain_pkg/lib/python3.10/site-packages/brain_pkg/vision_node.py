@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+from std_msgs.msg import Int32MultiArray
 os.environ["QT_QPA_PLATFORM"] = "xcb"
 
 import rclpy
@@ -16,6 +17,9 @@ class VisionNode(Node):
         super().__init__('vision_node')
         self.bridge = CvBridge()
         
+        # nhận Bbox
+        self.bbox_pub = self.create_publisher(Int32MultiArray, '/obs_bbox', 10)
+        
         # Đăng ký nhận ảnh từ camera màu
         self.create_subscription(Image, '/camera/color/image_raw', self.image_callback, 1)
         
@@ -24,13 +28,13 @@ class VisionNode(Node):
         self.raw_pub = self.create_publisher(Image, '/raw_image', 10)
         self.obs_center_pub = self.create_publisher(Point, '/obs_center_raw', 10) 
         
-        self.get_logger().info("⏳ Đang khởi tạo Vision Node với luồng camera ROS...")
+        self.get_logger().info("Đang khởi tạo Vision Node với luồng camera ROS...")
 
         # Nạp mô hình AI nhận diện làn đường và vật cản
         self.model = YOLO("best.pt", task='segment') 
         dummy_frame = np.zeros((480, 640, 3), dtype=np.uint8)
         self.model.predict(dummy_frame, verbose=False)
-        self.get_logger().info("✅ AI Nhận diện (Segmentation) đã sẵn sàng!")
+        self.get_logger().info("AI Nhận diện (Segmentation) đã sẵn sàng!")
 
         # Ma trận biến đổi không gian sang góc nhìn từ trên xuống (Bird's Eye View)
         self.M = cv2.getPerspectiveTransform(
@@ -41,12 +45,15 @@ class VisionNode(Node):
         self.is_processing = False
 
     def image_callback(self, msg):
+    	
         if self.is_processing: return
         self.is_processing = True
+        bbox_msg = Int32MultiArray()
 
         try:
-            frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-            results = self.model.predict(frame, conf=0.5, verbose=False)[0]
+            raw_frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+            frame = cv2.resize(raw_frame, (640, 480))
+            results = self.model.predict(frame, conf=0.5, imgsz=320, verbose=False)[0]
             
             bev_canvas = np.zeros((480, 640, 3), dtype=np.uint8) 
             # Tạo overlay để tô màu phân vùng (Segmentation)
@@ -89,6 +96,12 @@ class VisionNode(Node):
                         bx, by = int((x1 + x2) / 2), int(y2)
                         cv2.circle(bev_canvas, (bx, by), 10, (0, 0, 255), -1) 
                         seg_overlay[binary_mask == 1] = (0, 0, 255)
+                
+            if obs_bbox is not None:
+                bbox_msg.data = [int(obs_bbox[0]), int(obs_bbox[1]), int(obs_bbox[2]), int(obs_bbox[3])]
+            else:
+                bbox_msg.data = [-1, -1, -1, -1] 
+            self.bbox_pub.publish(bbox_msg)
 
             # --- TRỘN ẢNH VÀ HIỂN THỊ KẾT QUẢ NHẬN DIỆN ---
             seg_img = cv2.addWeighted(frame, 0.7, seg_overlay, 0.5, 0)

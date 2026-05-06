@@ -1,4 +1,6 @@
 [console_scripts]
+bridge = brain_pkg.bridge_node:main
 navigation = brain_pkg.navigation_node:main
+trajectory = brain_pkg.trajectory_node:main
 vision = brain_pkg.vision_node:main
 

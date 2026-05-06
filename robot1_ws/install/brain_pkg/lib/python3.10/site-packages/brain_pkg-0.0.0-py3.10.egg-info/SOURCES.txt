@@ -9,8 +9,11 @@ setup.py
 ../../build/brain_pkg/brain_pkg.egg-info/top_level.txt
 ../../build/brain_pkg/brain_pkg.egg-info/zip-safe
 brain_pkg/__init__.py
+brain_pkg/bridge_node.py
 brain_pkg/navigation_node.py
+brain_pkg/trajectory_node.py
 brain_pkg/vision_node.py
+launch/main.launch.py
 resource/brain_pkg
 test/test_copyright.py
 test/test_flake8.py
