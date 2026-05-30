@@ -16,7 +16,7 @@ class SocketBridgeNode(Node):
         super().__init__('socket_bridge_node')
         self.bridge = CvBridge()
         
-        self.pi_ip = '10.144.153.54' 
+        self.pi_ip = '10.180.114.54' 
         self.pi_port = 9999
         self.client = None
         

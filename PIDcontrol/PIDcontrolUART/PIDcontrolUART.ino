@@ -20,13 +20,13 @@ const float RPM_FILTER_ALPHA = 0.3;
 const float WHEEL_RADIUS = 0.033; // ms
 
 const float V_TO_RPM = 60.0 / (2 * PI * WHEEL_RADIUS);
-const unsigned long UART_TIMEOUT = 200; // ms 
+const unsigned long UART_TIMEOUT = 500; // ms 
 unsigned long lastUARTTime = 0;
 
 const unsigned long CONTROL_INTERVAL_MS = 30;
 
 // Feedforward
-const float KFF = 0.9;
+const float KFF = 1.96;
 
 // Balance
 float K_balance = 0.1;
@@ -73,8 +73,8 @@ void resetPID(PID &pid) {
 void setup() {
   Serial.begin(115200);
 
-  pinMode(ENA, OUTPUT); pinMode(IN1, OUTPUT); pinMode(IN2, OUTPUT);
-  pinMode(ENB, OUTPUT); pinMode(IN3, OUTPUT); pinMode(IN4, OUTPUT);
+  pinMode(ENA, OUTPUT);           pinMode(IN1, OUTPUT); pinMode(IN2, OUTPUT);
+  pinMode(ENB, OUTPUT);           pinMode(IN3, OUTPUT); pinMode(IN4, OUTPUT);
 
   pinMode(ENC_A1, INPUT_PULLUP);  pinMode(ENC_B1, INPUT_PULLUP);
   pinMode(ENC_A2, INPUT_PULLUP);  pinMode(ENC_B2, INPUT_PULLUP);
@@ -120,6 +120,7 @@ void loop() {
       setMotor2(0);
     }
 
+/*
     if (abs(rpm1Smooth) < 1 && abs(targetRPM1) > 10) {
       resetPID(pid1);
       pwm1 = 0;
@@ -128,6 +129,33 @@ void loop() {
     if (abs(rpm2Smooth) < 1 && abs(targetRPM2) > 10) {
       resetPID(pid2);
       pwm2 = 0;
+    }
+*/
+
+    static int stallCount1 = 0;
+    static int stallCount2 = 0;
+
+    // Nếu target lớn nhưng tốc độ thực tế quá nhỏ (đứng im)
+    if (abs(rpm1Smooth) < 2.0 && abs(targetRPM1) > 5.0) {
+      stallCount1++;
+      if (stallCount1 > 15) {
+        resetPID(pid1);
+        targetRPM1 = 0;       // Ép target về 0 để Ramp lên lại từ đầu cho mượt
+        pwm1 = 0;
+      }
+    } else {
+      stallCount1 = 0;        // Chạy bình thường thì xóa bộ đếm
+    }
+
+    if (abs(rpm2Smooth) < 2.0 && abs(targetRPM2) > 5.0) {
+      stallCount2++;
+      if (stallCount2 > 15) {
+        resetPID(pid2);
+        targetRPM2 = 0;
+        pwm2 = 0;
+      }
+    } else {
+      stallCount2 = 0;
     }
 
     // ===== Filter =====
@@ -161,21 +189,29 @@ void loop() {
     Serial.println(diff);
   }
 
-  // ===== SERIAL INPUT (FORMAT: <vL,vR>) =====
-  static String inputString = "";
+  // ===== SERIAL INPUT (TỐI ƯU HÓA KHÔNG DÙNG STRING) =====
+  static char inputBuffer[32];
+  static byte bufferIndex = 0;
+  static bool isParsing = false;
 
   while (Serial.available()) {
     char c = Serial.read();
 
     if (c == '<') {
-      inputString = "";
-    }
-    else if (c == '>') {
-      int commaIndex = inputString.indexOf(',');
+      bufferIndex = 0;
+      isParsing = true;
+    } 
+    else if (c == '>' && isParsing) {
+      inputBuffer[bufferIndex] = '\0'; // Kết thúc chuỗi C
+      isParsing = false;
 
-      if (commaIndex > 0) {
-        float v_right  = inputString.substring(0, commaIndex).toFloat();
-        float v_left = inputString.substring(commaIndex + 1).toFloat();
+      // Tách chuỗi bằng dấu phẩy
+      char* commaPtr = strchr(inputBuffer, ',');
+      if (commaPtr != NULL) {
+        *commaPtr = '\0'; // Cắt chuỗi tại dấu phẩy
+        
+        float v_right = atof(inputBuffer);
+        float v_left = atof(commaPtr + 1);
 
         // ===== Convert m/s → RPM =====
         float rpmL = v_left * V_TO_RPM;
@@ -188,9 +224,9 @@ void loop() {
         // ===== RESET TIMEOUT =====
         lastUARTTime = millis();
       }
-    }
-    else {
-      inputString += c;
+    } 
+    else if (isParsing && bufferIndex < 31) {
+      inputBuffer[bufferIndex++] = c;
     }
   }
 }
